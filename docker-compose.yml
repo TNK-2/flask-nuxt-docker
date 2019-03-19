@@ -1,0 +1,51 @@
+version: '2'
+
+services:
+
+  api:
+    container_name: wisnote-api
+    restart: always
+    build:
+      context: ./api
+    working_dir: /app
+    volumes:
+      - ./api/app:/app
+    expose:
+      - 5000
+    ports:
+      - 80:5000
+    command: python3 app.py
+    depends_on:
+      - mysql
+
+  app:
+    container_name: wisnote-front
+    build:
+      context: ./front
+    tty: true
+    ports:
+      - 3000:3000
+    working_dir: /app
+    volumes:
+      - ./front:/app
+      - node_modules:/app/node_modules:cached
+    command: yarn dev
+
+  mysql:
+    container_name: wisnote-mysql
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: wisnote
+      MYSQL_ROOT_PASSWORD: password
+    expose:
+      - 3306
+    volumes:
+      - mysql-data:/var/lib/mysql:cached
+      - ./mysql/conf:/etc/mysql/conf.d:cached
+    command: --innodb-use-native-aio=0
+
+volumes:
+  node_modules:
+    driver: local
+  mysql-data:
+    driver: local
